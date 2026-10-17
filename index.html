@@ -25,7 +25,7 @@
 
         <!-- TAB 1: GAME VIEW -->
         <div id="view-game" class="space-y-4">
-
+            
             <!-- Setup Screen (Foursome Selector) -->
             <div id="setup-card" class="bg-white rounded-xl shadow p-5 space-y-4">
                 <h2 class="text-lg font-bold text-gray-800 border-b pb-2">Select Today's Foursome (2-4 Players)</h2>
@@ -39,7 +39,7 @@
 
             <!-- Active Gameplay Card -->
             <div id="gameplay-card" class="hidden space-y-4">
-
+                
                 <!-- Quit Round Control Bar -->
                 <div class="flex justify-between items-center px-1">
                     <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Active Round</span>
@@ -68,7 +68,7 @@
                     <div id="hole-inputs-list" class="space-y-3">
                         <!-- Populated by JS -->
                     </div>
-
+                    
                     <!-- Navigation Buttons (Prev / Next Hole) -->
                     <div class="flex space-x-2 pt-2">
                         <button id="prev-hole-btn" onclick="prevHole()" class="w-1/3 bg-gray-200 text-gray-700 font-semibold py-3 rounded-xl transition shadow hover:bg-gray-300 flex items-center justify-center gap-1">
@@ -162,7 +162,6 @@
 
     <!-- JavaScript Application Logic -->
     <script>
-        // Persistent State Management
         let players = JSON.parse(localStorage.getItem('golf_players')) || [
             { id: '1', name: 'Player 1', venmo: '@Player-One' },
             { id: '2', name: 'Player 2', venmo: '@Player-Two' },
@@ -174,19 +173,17 @@
             selectedIDs: players.slice(0, 4).map(p => p.id),
             currentHole: 1,
             gameStarted: false,
-            activePlayers: [], // { id, name, venmo, holeNet }
-            holeHistory: {}    // Stores net per hole per player: { 1: { playerID: amount }, 2: { playerID: amount } }
+            activePlayers: [], 
+            holeHistory: {}    
         };
 
         let editingPlayerId = null;
 
-        // Initialize UI on load
         window.onload = function() {
             renderSetupList();
             renderDirectory();
         };
 
-        // Tab Navigation
         function switchTab(tab) {
             const gameView = document.getElementById('view-game');
             const dirView = document.getElementById('view-directory');
@@ -206,11 +203,10 @@
             }
         }
 
-        // Foursome Selection Setup
         function renderSetupList() {
             const container = document.getElementById('setup-player-list');
             if (players.length === 0) {
-                container.innerHTML = `<p class="text-sm text-red-500 text-center py-2">No players found. Please add players in the 'Players' tab first.</p>`;
+                container.innerHTML = `<p class="text-sm text-red-500 text-center py-2">No players found.</p>`;
                 return;
             }
 
@@ -235,13 +231,13 @@
                 if (activeRound.selectedIDs.length > 2) {
                     activeRound.selectedIDs = activeRound.selectedIDs.filter(item => item !== id);
                 } else {
-                    alert("You need at least 2 players for a round.");
+                    alert("Minimum 2 players required.");
                 }
             } else {
                 if (activeRound.selectedIDs.length < 4) {
                     activeRound.selectedIDs.push(id);
                 } else {
-                    alert("Maximum 4 players allowed per round.");
+                    alert("Maximum 4 players allowed.");
                 }
             }
             renderSetupList();
@@ -251,8 +247,9 @@
             if (activeRound.selectedIDs.length < 2) return;
             const selected = players.filter(p => activeRound.selectedIDs.includes(p.id));
             activeRound.activePlayers = selected.map(p => ({
-                ...p,
-                holeNet: 0
+                id: p.id,
+                name: p.name,
+                venmo: p.venmo
             }));
             activeRound.currentHole = 1;
             activeRound.gameStarted = true;
@@ -266,25 +263,18 @@
         }
 
         function confirmQuitRound() {
-            if (confirm("Are you sure you want to quit this round? All recorded scores for this round will be cleared.")) {
+            if (confirm("Are you sure you want to quit this round?")) {
                 resetGame();
             }
         }
 
-        // Gameplay Rendering & History Input Management
         function renderGameplay() {
             const h = activeRound.currentHole;
             document.getElementById('header-status').innerText = `Hole ${h} of 18`;
             document.getElementById('current-hole-title').innerText = `Hole ${h} Net Gains/Losses`;
 
-            // Load existing hole data if returning to a previous hole
             const currentHoleData = activeRound.holeHistory[h] || {};
 
-            activeRound.activePlayers.forEach(p => {
-                p.holeNet = currentHoleData[p.id] !== undefined ? currentHoleData[p.id] : 0;
-            });
-
-            // Prev Hole button state
             const prevBtn = document.getElementById('prev-hole-btn');
             if (h === 1) {
                 prevBtn.disabled = true;
@@ -295,302 +285,51 @@
             }
 
             const inputsContainer = document.getElementById('hole-inputs-list');
-            inputsContainer.innerHTML = activeRound.activePlayers.map((p, idx) => `
-                <div class="flex items-center justify-between bg-gray-50 p-3 rounded-xl border border-gray-200">
-                    <span class="font-bold text-gray-800 text-sm w-1/3">${p.name}</span>
-                    <div class="flex items-center space-x-2 w-2/3 justify-end">
-                        <button onclick="toggleSign(${idx})" class="px-2.5 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold rounded-lg text-xs" title="Toggle Positive/Negative">
-                            +/-
-                        </button>
-                        <div class="relative w-28">
-                            <span class="absolute left-3 top-2.5 text-gray-400 font-semibold">$</span>
-                            <input type="tel" id="input-${idx}" value="${p.holeNet === 0 ? '' : p.holeNet}" oninput="updateHoleNet(${idx}, this.value)" placeholder="0.00" class="w-full pl-7 pr-3 py-2 border border-gray-300 rounded-lg text-right font-bold text-gray-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+            inputsContainer.innerHTML = activeRound.activePlayers.map((p, idx) => {
+                const val = currentHoleData[p.id] !== undefined ? currentHoleData[p.id] : 0;
+                return `
+                    <div class="flex items-center justify-between bg-gray-50 p-3 rounded-xl border border-gray-200">
+                        <span class="font-bold text-gray-800 text-sm w-1/3">${p.name}</span>
+                        <div class="flex items-center space-x-2 w-2/3 justify-end">
+                            <button type="button" onclick="toggleSign('${p.id}')" class="px-2.5 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold rounded-lg text-xs">+/-</button>
+                            <div class="relative w-28">
+                                <span class="absolute left-3 top-2.5 text-gray-400 font-semibold">$</span>
+                                <input type="tel" id="input-${p.id}" value="${val === 0 ? '' : val}" oninput="updateHoleNet('${p.id}', this.value)" placeholder="0.00" class="w-full pl-7 pr-3 py-2 border border-gray-300 rounded-lg text-right font-bold text-gray-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                            </div>
                         </div>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
 
             renderLeaderboard();
             checkBalance();
         }
 
-        function toggleSign(idx) {
-            activeRound.activePlayers[idx].holeNet = activeRound.activePlayers[idx].holeNet * -1;
+        function toggleSign(playerId) {
+            const h = activeRound.currentHole;
+            if (!activeRound.holeHistory[h]) activeRound.holeHistory[h] = {};
+            const current = activeRound.holeHistory[h][playerId] || 0;
+            activeRound.holeHistory[h][playerId] = current * -1;
             renderGameplay();
         }
 
-        function updateHoleNet(idx, val) {
+        function updateHoleNet(playerId, val) {
+            const h = activeRound.currentHole;
+            if (!activeRound.holeHistory[h]) activeRound.holeHistory[h] = {};
             let cleanVal = val.replace(/[^0-9.-]/g, '');
-            activeRound.activePlayers[idx].holeNet = parseFloat(cleanVal) || 0;
+            activeRound.holeHistory[h][playerId] = parseFloat(cleanVal) || 0;
             checkBalance();
             renderLeaderboard();
         }
 
         function checkBalance() {
-            const sum = activeRound.activePlayers.reduce((acc, p) => acc + (isNaN(p.holeNet) ? 0 : p.holeNet), 0);
-            const isBalanced = Math.abs(sum) < 0.01;
+            const h = activeRound.currentHole;
+            const holeData = activeRound.holeHistory[h] || {};
+            let sum = 0;
+            activeRound.activePlayers.forEach(p => {
+                sum += (holeData[p.id] || 0);
+            });
 
+            const isBalanced = Math.abs(sum) < 0.01;
             const banner = document.getElementById('balance-banner');
             const balanceText = document.getElementById('balance-text');
-            const badge = document.getElementById('balance-badge');
-            const nextBtn = document.getElementById('next-hole-btn');
-
-            balanceText.innerText = `Net: ${formatCurrency(sum)}`;
-
-            if (isBalanced) {
-                banner.className = "bg-white rounded-xl shadow p-4 flex items-center justify-between border-l-4 border-emerald-500";
-                badge.className = "px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 flex items-center gap-1";
-                badge.innerHTML = `<i class="fa-solid fa-check-circle"></i> Balanced`;
-                balanceText.className = "text-lg font-bold text-emerald-600";
-
-                nextBtn.disabled = false;
-                nextBtn.className = "w-2/3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-xl transition shadow cursor-pointer";
-                nextBtn.innerText = activeRound.currentHole < 18 ? "Save & Next" : "Finish Round";
-            } else {
-                banner.className = "bg-white rounded-xl shadow p-4 flex items-center justify-between border-l-4 border-red-500";
-                badge.className = "px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700 flex items-center gap-1";
-                badge.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Unbalanced`;
-                balanceText.className = "text-lg font-bold text-red-600";
-
-                nextBtn.disabled = true;
-                nextBtn.className = "w-2/3 bg-gray-300 text-gray-500 font-semibold py-3 rounded-xl transition shadow cursor-not-allowed";
-                nextBtn.innerText = "Must Equal $0.00";
-            }
-        }
-
-        // Dynamic Standings Recalculation across all holes in history
-        function calculateOverallTotals() {
-            const totals = {};
-            activeRound.activePlayers.forEach(p => totals[p.id] = 0);
-
-            // Sum all recorded holes in history
-            Object.keys(activeRound.holeHistory).forEach(holeNum => {
-                const holeData = activeRound.holeHistory[holeNum];
-                // Only sum holes that are NOT the active hole (active hole uses live inputs)
-                if (parseInt(holeNum) !== activeRound.currentHole) {
-                    Object.keys(holeData).forEach(pId => {
-                        if (totals[pId] !== undefined) {
-                            totals[pId] += holeData[pId] || 0;
-                        }
-                    });
-                }
-            });
-
-            // Add live active hole values
-            activeRound.activePlayers.forEach(p => {
-                totals[p.id] += (p.holeNet || 0);
-            });
-
-            return totals;
-        }
-
-        function renderLeaderboard() {
-            const list = document.getElementById('leaderboard-list');
-            const totals = calculateOverallTotals();
-
-            const sorted = [...activeRound.activePlayers].map(p => ({
-                ...p,
-                totalNet: totals[p.id] || 0
-            })).sort((a, b) => b.totalNet - a.totalNet);
-
-            list.innerHTML = sorted.map(p => {
-                const colorClass = p.totalNet > 0 ? 'text-emerald-600' : (p.totalNet < 0 ? 'text-red-600' : 'text-gray-700');
-                return `
-                    <div class="flex justify-between items-center py-1.5 border-b border-gray-100 last:border-0">
-                        <div>
-                            <div class="font-bold text-sm text-gray-800">${p.name}</div>
-                            <div class="text-xs text-gray-400">${p.venmo}</div>
-                        </div>
-                        <div class="font-bold text-sm ${colorClass}">
-                            ${formatCurrency(p.totalNet)}
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function recordHole() {
-            const h = activeRound.currentHole;
-
-            // Commit current inputs to history object
-            if (!activeRound.holeHistory[h]) {
-                activeRound.holeHistory[h] = {};
-            }
-            activeRound.activePlayers.forEach(p => {
-                activeRound.holeHistory[h][p.id] = p.holeNet;
-            });
-
-            if (h < 18) {
-                activeRound.currentHole++;
-                renderGameplay();
-            } else {
-                showSettlements();
-            }
-        }
-
-        function prevHole() {
-            if (activeRound.currentHole > 1) {
-                // Save current edits if balanced before moving back
-                const sum = activeRound.activePlayers.reduce((acc, p) => acc + (isNaN(p.holeNet) ? 0 : p.holeNet), 0);
-                if (Math.abs(sum) < 0.01) {
-                    const h = activeRound.currentHole;
-                    if (!activeRound.holeHistory[h]) activeRound.holeHistory[h] = {};
-                    activeRound.activePlayers.forEach(p => {
-                        activeRound.holeHistory[h][p.id] = p.holeNet;
-                    });
-                }
-                activeRound.currentHole--;
-                renderGameplay();
-            }
-        }
-
-        function showSettlements() {
-            document.getElementById('gameplay-card').classList.add('hidden');
-            document.getElementById('settlement-card').classList.remove('hidden');
-            document.getElementById('header-status').innerText = "Round Finished";
-
-            const container = document.getElementById('settlement-list');
-            const totals = calculateOverallTotals();
-
-            const standings = activeRound.activePlayers.map(p => ({
-                ...p,
-                totalNet: totals[p.id] || 0
-            }));
-
-            const losers = standings.filter(p => p.totalNet < -0.01);
-            const winners = standings.filter(p => p.totalNet > 0.01);
-
-            if (losers.length === 0) {
-                container.innerHTML = `<p class="text-center text-gray-500 py-4">Everyone broke even!</p>`;
-                return;
-            }
-
-            container.innerHTML = losers.map(loser => {
-                const owedAmount = Math.abs(loser.totalNet);
-                return `
-                    <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-2">
-                        <div class="flex justify-between items-center">
-                            <span class="font-bold text-gray-800">${loser.name} owes total:</span>
-                            <span class="font-extrabold text-red-600">${formatCurrency(owedAmount)}</span>
-                        </div>
-                        <div class="space-y-1.5 pt-1">
-                            ${winners.map(winner => {
-                                const cleanVenmo = winner.venmo.replace('@', '');
-                                const note = encodeURIComponent("Golf Settlement - 18 Holes");
-                                const venmoAppUrl = `venmo://pay-to?recipients=${cleanVenmo}&amount=${owedAmount.toFixed(2)}&note=${note}`;
-                                const venmoWebUrl = `https://venmo.com/${cleanVenmo}?txn=pay&amount=${owedAmount.toFixed(2)}&note=Golf%20Settlement`;
-
-                                return `
-                                    <a href="${venmoAppUrl}" onclick="setTimeout(() => window.location='${venmoWebUrl}', 500)" class="flex justify-between items-center bg-blue-50 hover:bg-blue-100 text-blue-700 p-2.5 rounded-lg text-xs font-semibold transition">
-                                        <span><i class="fa-solid fa-arrow-up-right-from-square mr-1.5"></i> Pay ${winner.name} (${winner.venmo})</span>
-                                        <span>${formatCurrency(owedAmount)}</span>
-                                    </a>
-                                `;
-                            }).join('')}
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function resetGame() {
-            activeRound.gameStarted = false;
-            activeRound.currentHole = 1;
-            activeRound.holeHistory = {};
-            document.getElementById('gameplay-card').classList.add('hidden');
-            document.getElementById('settlement-card').classList.add('hidden');
-            document.getElementById('setup-card').classList.remove('hidden');
-            document.getElementById('header-status').innerText = "New Round";
-            renderSetupList();
-        }
-
-        // Directory Management Functions
-        function renderDirectory() {
-            const list = document.getElementById('directory-list');
-            if (players.length === 0) {
-                list.innerHTML = `<p class="text-sm text-gray-400 text-center py-4">No players saved yet.</p>`;
-                return;
-            }
-
-            list.innerHTML = players.map(p => `
-                <div class="flex justify-between items-center p-3 bg-gray-50 border border-gray-200 rounded-xl">
-                    <div>
-                        <div class="font-bold text-gray-800">${p.name}</div>
-                        <div class="text-xs text-gray-500">${p.venmo}</div>
-                    </div>
-                    <div class="flex space-x-2">
-                        <button onclick="editPlayer('${p.id}')" class="p-2 text-gray-500 hover:text-gray-800"><i class="fa-solid fa-pen"></i></button>
-                        <button onclick="deletePlayer('${p.id}')" class="p-2 text-red-400 hover:text-red-600"><i class="fa-solid fa-trash"></i></button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function openAddPlayerModal() {
-            editingPlayerId = null;
-            document.getElementById('modal-title').innerText = "Add Player";
-            document.getElementById('modal-name').value = "";
-            document.getElementById('modal-venmo').value = "";
-            document.getElementById('player-modal').classList.remove('hidden');
-        }
-
-        function editPlayer(id) {
-            editingPlayerId = id;
-            const p = players.find(x => x.id === id);
-            document.getElementById('modal-title').innerText = "Edit Player";
-            document.getElementById('modal-name').value = p.name;
-            document.getElementById('modal-venmo').value = p.venmo;
-            document.getElementById('player-modal').classList.remove('hidden');
-        }
-
-        function closeModal() {
-            document.getElementById('player-modal').classList.add('hidden');
-        }
-
-        function savePlayer() {
-            const name = document.getElementById('modal-name').value.trim();
-            let venmo = document.getElementById('modal-venmo').value.trim();
-
-            if (!name) {
-                alert("Please enter a player name.");
-                return;
-            }
-
-            if (venmo && !venmo.startsWith('@')) {
-                venmo = '@' + venmo;
-            }
-
-            if (editingPlayerId) {
-                players = players.map(p => p.id === editingPlayerId ? { ...p, name, venmo } : p);
-            } else {
-                const newP = { id: Date.now().toString(), name, venmo: venmo || '@' + name.replace(/\s+/g, '') };
-                players.push(newP);
-                if (activeRound.selectedIDs.length < 4) {
-                    activeRound.selectedIDs.push(newP.id);
-                }
-            }
-
-            localStorage.setItem('golf_players', JSON.stringify(players));
-            closeModal();
-            renderDirectory();
-            renderSetupList();
-        }
-
-        function deletePlayer(id) {
-            if (players.length <= 2) {
-                alert("You must keep at least 2 players in the directory.");
-                return;
-            }
-            players = players.filter(p => p.id !== id);
-            activeRound.selectedIDs = activeRound.selectedIDs.filter(selectedId => selectedId !== id);
-            localStorage.setItem('golf_players', JSON.stringify(players));
-            renderDirectory();
-            renderSetupList();
-        }
-
-        function formatCurrency(val) {
-            return (val < 0 ? "-$" : "$") + Math.abs(val).toFixed(2);
-        }
-    </script>
-</body>
-</html>
