@@ -3,122 +3,161 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GolfSettler - Mobile Golf Gambling Ledger</title>
+    <title>GolfSettler - Golf Gambling Ledger</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { -webkit-tap-highlight-color: transparent; }
+        body { 
+            -webkit-tap-highlight-color: transparent; 
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+        /* Hide spin buttons for Chrome, Safari, Edge, Opera */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        /* Hide spin buttons for Firefox */
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-900 font-sans antialiased pb-20">
+<body class="bg-gray-100 text-gray-900 min-h-screen flex flex-col pb-20">
 
-    <!-- App Header -->
+    <!-- Header & Dynamic Status Banner -->
     <header class="bg-emerald-800 text-white shadow-md sticky top-0 z-50">
         <div class="max-w-md mx-auto px-4 py-3 flex justify-between items-center">
-            <h1 class="text-xl font-bold tracking-wide"><i class="fa-solid fa-flag-checkered mr-2"></i>GolfSettler</h1>
-            <div id="header-status" class="text-xs bg-emerald-700 px-2.5 py-1 rounded-full font-medium">Hole 1 of 18</div>
+            <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-flag-checkered text-emerald-300 text-xl"></i>
+                <h1 class="text-xl font-black tracking-tight">GolfSettler</h1>
+            </div>
+            <div id="header-status" class="text-xs bg-emerald-900/80 text-emerald-100 border border-emerald-600/50 px-2.5 py-1 rounded-full font-semibold flex items-center gap-1">
+                <i class="fa-solid fa-circle-info text-[10px]"></i> Setup Phase
+            </div>
         </div>
     </header>
 
-    <!-- Main Container -->
-    <main class="max-w-md mx-auto p-4 space-y-4">
+    <!-- Main Mobile Content Area -->
+    <main class="max-w-md mx-auto w-full p-4 flex-1 space-y-4">
 
-        <!-- TAB 1: GAME VIEW -->
+        <!-- TAB 1: ROUND VIEW -->
         <div id="view-game" class="space-y-4">
             
             <!-- Setup Screen (Foursome Selector) -->
-            <div id="setup-card" class="bg-white rounded-xl shadow p-5 space-y-4">
-                <h2 class="text-lg font-bold text-gray-800 border-b pb-2">Select Today's Foursome (2-4 Players)</h2>
-                <div id="setup-player-list" class="space-y-2 max-h-60 overflow-y-auto">
+            <div id="setup-card" class="bg-white rounded-2xl shadow-sm border border-gray-200/80 p-5 space-y-4">
+                <div class="border-b border-gray-100 pb-3">
+                    <h2 class="text-lg font-bold text-gray-800">Select Group for Round</h2>
+                    <p class="text-xs text-gray-500 mt-0.5">Pick 2 to 4 golfers from your directory to start playing.</p>
+                </div>
+                <div id="setup-player-list" class="space-y-2.5 max-h-72 overflow-y-auto pr-1">
                     <!-- Populated by JS -->
                 </div>
-                <button onclick="startGame()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-xl transition shadow">
-                    Start Round
+                <button onclick="startGame()" class="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-bold py-3.5 rounded-xl transition shadow-md shadow-emerald-600/20 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-play"></i> Start 18-Hole Round
                 </button>
             </div>
 
             <!-- Active Gameplay Card -->
             <div id="gameplay-card" class="hidden space-y-4">
                 
-                <!-- Quit Round Control Bar -->
+                <!-- Quit Round Header Button -->
                 <div class="flex justify-between items-center px-1">
-                    <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Active Round</span>
-                    <button onclick="confirmQuitRound()" class="text-xs text-red-500 hover:text-red-700 font-semibold flex items-center gap-1 bg-red-50 hover:bg-red-100 px-2.5 py-1 rounded-lg border border-red-200 transition">
-                        <i class="fa-solid fa-xmark"></i> Quit Round
+                    <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Round in Progress</span>
+                    <button onclick="confirmQuitRound()" class="text-xs text-red-600 hover:text-red-800 font-bold flex items-center gap-1.5 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg border border-red-200 transition shadow-sm active:scale-95">
+                        <i class="fa-solid fa-right-from-bracket"></i> Quit Round
                     </button>
                 </div>
 
-                <!-- Status Banner -->
-                <div class="bg-white rounded-xl shadow p-4 flex items-center justify-between border-l-4" id="balance-banner">
+                <!-- Zero-Sum Guardrail Status Indicator -->
+                <div class="bg-white rounded-2xl shadow-sm p-4 flex items-center justify-between border-l-4 transition-all duration-300" id="balance-banner">
                     <div>
-                        <span class="text-xs text-gray-500 uppercase font-bold tracking-wider">Hole Balance</span>
-                        <div id="balance-text" class="text-lg font-bold text-red-600">Net: $0.00</div>
+                        <span class="text-[10px] text-gray-400 uppercase font-bold tracking-wider block">Hole Net Sum</span>
+                        <div id="balance-text" class="text-xl font-black text-red-600">Net: $0.00</div>
                     </div>
-                    <div id="balance-badge" class="px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700 flex items-center gap-1">
+                    <div id="balance-badge" class="px-3 py-1.5 rounded-full text-xs font-bold bg-red-100 text-red-700 flex items-center gap-1.5 shadow-sm">
                         <i class="fa-solid fa-triangle-exclamation"></i> Unbalanced
                     </div>
                 </div>
 
-                <!-- Hole Input Section -->
-                <div class="bg-white rounded-xl shadow p-5 space-y-4">
-                    <div class="flex justify-between items-center border-b pb-2">
-                        <h2 id="current-hole-title" class="text-lg font-bold text-gray-800">Hole 1 Net Gains/Losses</h2>
-                        <span class="text-xs text-gray-400">Must equal $0.00</span>
-                    </div>
-                    <div id="hole-inputs-list" class="space-y-3">
-                        <!-- Populated by JS -->
+                <!-- Hole Input Card -->
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-200/80 p-5 space-y-4">
+                    <div class="flex justify-between items-center border-b border-gray-100 pb-3">
+                        <h2 id="current-hole-title" class="text-lg font-bold text-gray-800">Hole 1 Inputs</h2>
+                        <span class="text-xs font-medium text-gray-400 bg-gray-100 px-2 py-0.5 rounded">Target: $0.00 Total</span>
                     </div>
                     
-                    <!-- Navigation Buttons (Prev / Next Hole) -->
+                    <div id="hole-inputs-list" class="space-y-3">
+                        <!-- Populated dynamically by JS -->
+                    </div>
+
+                    <!-- Previous & Next Navigation Controls -->
                     <div class="flex space-x-2 pt-2">
-                        <button id="prev-hole-btn" onclick="prevHole()" class="w-1/3 bg-gray-200 text-gray-700 font-semibold py-3 rounded-xl transition shadow hover:bg-gray-300 flex items-center justify-center gap-1">
-                            <i class="fa-solid fa-chevron-left text-xs"></i> Prev
+                        <button id="prev-hole-btn" onclick="previousHole()" class="w-1/3 bg-gray-100 hover:bg-gray-200 active:scale-95 text-gray-700 font-bold py-3.5 rounded-xl transition flex items-center justify-center gap-1.5 text-xs shadow-sm">
+                            <i class="fa-solid fa-chevron-left"></i> Prev Hole
                         </button>
-                        <button id="next-hole-btn" onclick="recordHole()" disabled class="w-2/3 bg-gray-300 text-gray-500 font-semibold py-3 rounded-xl transition shadow cursor-not-allowed">
-                            Save & Next
+                        <button id="next-hole-btn" onclick="recordHole()" disabled class="w-2/3 bg-gray-200 text-gray-400 font-bold py-3.5 rounded-xl transition shadow-none cursor-not-allowed flex items-center justify-center gap-2 text-xs">
+                            Must Equal $0.00 to Save
                         </button>
                     </div>
                 </div>
 
-                <!-- Overall Leaderboard Card -->
-                <div class="bg-white rounded-xl shadow p-5 space-y-3">
-                    <h2 class="text-md font-bold text-gray-800 border-b pb-2">Overall Standings</h2>
+                <!-- Live Standings Leaderboard -->
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-200/80 p-5 space-y-3">
+                    <div class="flex justify-between items-center border-b border-gray-100 pb-2">
+                        <h2 class="text-sm font-bold text-gray-800 uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-chart-line text-emerald-600"></i> Running Standings
+                        </h2>
+                        <span class="text-xs text-gray-400">Cumulative Net</span>
+                    </div>
                     <div id="leaderboard-list" class="space-y-2">
-                        <!-- Populated by JS -->
+                        <!-- Populated dynamically by JS -->
                     </div>
                 </div>
             </div>
 
-            <!-- Settlement Card (Shown after Hole 18) -->
-            <div id="settlement-card" class="hidden bg-white rounded-xl shadow p-5 space-y-4">
-                <div class="text-center space-y-1">
-                    <div class="inline-block p-3 bg-emerald-100 text-emerald-700 rounded-full text-2xl mb-1">
+            <!-- End of Round Settlement Screen -->
+            <div id="settlement-card" class="hidden bg-white rounded-2xl shadow-sm border border-gray-200/80 p-6 space-y-5">
+                <div class="text-center space-y-2">
+                    <div class="inline-flex items-center justify-center w-14 h-14 bg-emerald-100 text-emerald-700 rounded-full text-2xl mb-1 shadow-inner">
                         <i class="fa-solid fa-trophy"></i>
                     </div>
-                    <h2 class="text-xl font-bold text-gray-800">Round Completed!</h2>
-                    <p class="text-sm text-gray-500">Tap below to settle up via Venmo.</p>
+                    <h2 class="text-2xl font-black text-gray-800 tracking-tight">Round Completed!</h2>
+                    <p class="text-xs text-gray-500 max-w-xs mx-auto">Final payouts and settlements based on all 18 holes.</p>
                 </div>
+
                 <div id="settlement-list" class="space-y-3 pt-2">
-                    <!-- Populated by JS -->
+                    <!-- Populated dynamically by JS -->
                 </div>
-                <button onclick="resetGame()" class="w-full bg-gray-800 hover:bg-gray-900 text-white font-semibold py-3 rounded-xl transition shadow">
-                    Start New Round
-                </button>
+
+                <div class="flex space-x-2 pt-2">
+                    <button onclick="reopenHole(18)" class="w-1/3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3.5 rounded-xl transition flex items-center justify-center gap-1.5 text-xs shadow-sm">
+                        <i class="fa-solid fa-pen"></i> Edit Hole 18
+                    </button>
+                    <button onclick="resetGame()" class="w-2/3 bg-gray-900 hover:bg-gray-800 active:scale-[0.99] text-white font-bold py-3.5 rounded-xl transition shadow-md flex items-center justify-center gap-2 text-xs">
+                        <i class="fa-solid fa-rotate-right"></i> Start New Round
+                    </button>
+                </div>
             </div>
 
         </div>
 
-        <!-- TAB 2: PLAYER DIRECTORY VIEW -->
+        <!-- TAB 2: PLAYER DIRECTORY TAB -->
         <div id="view-directory" class="hidden space-y-4">
-            <div class="bg-white rounded-xl shadow p-5 space-y-4">
-                <div class="flex justify-between items-center border-b pb-2">
-                    <h2 class="text-lg font-bold text-gray-800">Player Directory</h2>
-                    <button onclick="openAddPlayerModal()" class="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-sm font-semibold shadow hover:bg-emerald-700">
-                        <i class="fa-solid fa-plus mr-1"></i> Add Player
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200/80 p-5 space-y-4">
+                <div class="flex justify-between items-center border-b border-gray-100 pb-3">
+                    <div>
+                        <h2 class="text-lg font-bold text-gray-800">Player Directory</h2>
+                        <p class="text-xs text-gray-500">Manage golfers for your games</p>
+                    </div>
+                    <button onclick="openAddPlayerModal()" class="bg-emerald-600 text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-md shadow-emerald-600/20 hover:bg-emerald-700 active:scale-95 transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-user-plus"></i> Add
                     </button>
                 </div>
-                <div id="directory-list" class="space-y-3">
-                    <!-- Populated by JS -->
+                <div id="directory-list" class="space-y-2.5 max-h-96 overflow-y-auto pr-1">
+                    <!-- Populated dynamically by JS -->
                 </div>
             </div>
         </div>
@@ -130,60 +169,64 @@
         <div class="max-w-md mx-auto flex justify-around py-2">
             <button onclick="switchTab('game')" id="nav-game" class="flex flex-col items-center text-emerald-700 w-1/2 py-1">
                 <i class="fa-solid fa-golf-ball-tee text-lg"></i>
-                <span class="text-xs font-semibold mt-1">Round</span>
+                <span class="text-[11px] font-bold mt-0.5">Round</span>
             </button>
             <button onclick="switchTab('directory')" id="nav-directory" class="flex flex-col items-center text-gray-400 w-1/2 py-1">
-                <i class="fa-solid fa-users text-lg"></i>
-                <span class="text-xs font-semibold mt-1">Players</span>
+                <i class="fa-solid fa-address-book text-lg"></i>
+                <span class="text-[11px] font-bold mt-0.5">Players</span>
             </button>
         </div>
     </nav>
 
     <!-- Add/Edit Player Modal -->
-    <div id="player-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-sm w-full p-6 space-y-4 shadow-xl">
-            <h3 id="modal-title" class="text-lg font-bold text-gray-800">Add Player</h3>
+    <div id="player-modal" class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 space-y-4 shadow-2xl">
+            <h3 id="modal-title" class="text-lg font-extrabold text-gray-800 border-b border-gray-100 pb-2">Add Golfer</h3>
             <div class="space-y-3">
                 <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Name</label>
-                    <input type="text" id="modal-name" class="w-full border border-gray-300 rounded-lg p-3 text-base focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="e.g. Tiger Woods">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Venmo Handle</label>
-                    <input type="text" id="modal-venmo" class="w-full border border-gray-300 rounded-lg p-3 text-base focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="e.g. @Tiger-Woods">
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Golfer Name</label>
+                    <input type="text" id="modal-name" class="w-full border border-gray-300 rounded-xl p-3 text-sm font-semibold focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="e.g. Scottie Scheffler">
                 </div>
             </div>
             <div class="flex space-x-3 pt-2">
-                <button onclick="closeModal()" class="w-1/2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 rounded-xl transition">Cancel</button>
-                <button onclick="savePlayer()" class="w-1/2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-xl transition shadow">Save</button>
+                <button onclick="closeModal()" class="w-1/2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 rounded-xl transition">Cancel</button>
+                <button onclick="savePlayer()" class="w-1/2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl transition shadow-md shadow-emerald-600/20">Save</button>
             </div>
         </div>
     </div>
 
-    <!-- JavaScript Application Logic -->
+    <!-- Complete JavaScript Logic -->
     <script>
-        let players = JSON.parse(localStorage.getItem('golf_players')) || [
-            { id: '1', name: 'Player 1', venmo: '@Player-One' },
-            { id: '2', name: 'Player 2', venmo: '@Player-Two' },
-            { id: '3', name: 'Player 3', venmo: '@Player-Three' },
-            { id: '4', name: 'Player 4', venmo: '@Player-Four' }
+        // Initial Default Directory Data
+        const defaultPlayers = [
+            { id: '1', name: 'John Doe' },
+            { id: '2', name: 'Mike Smith' },
+            { id: '3', name: 'Alex Johnson' },
+            { id: '4', name: 'Chris Lee' }
         ];
 
+        // localStorage Persistence
+        let players = JSON.parse(localStorage.getItem('golf_settler_directory')) || defaultPlayers;
+
+        // Active State Variable
         let activeRound = {
             selectedIDs: players.slice(0, 4).map(p => p.id),
             currentHole: 1,
             gameStarted: false,
-            activePlayers: [], 
-            holeHistory: {}    
+            activePlayers: [], // array of player objects for current round
+            currentHoleInputs: {}, // { playerId: number }
+            holeHistory: [] // Array of hole input objects [ { p1: val, p2: val }, ... ]
         };
 
         let editingPlayerId = null;
 
+        // Page Initialization
         window.onload = function() {
             renderSetupList();
             renderDirectory();
         };
 
+        // Navigation Tab Switching
         function switchTab(tab) {
             const gameView = document.getElementById('view-game');
             const dirView = document.getElementById('view-directory');
@@ -203,23 +246,23 @@
             }
         }
 
+        // Foursome Selection UI
         function renderSetupList() {
             const container = document.getElementById('setup-player-list');
             if (players.length === 0) {
-                container.innerHTML = `<p class="text-sm text-red-500 text-center py-2">No players found.</p>`;
+                container.innerHTML = `<p class="text-xs text-red-500 text-center py-4">No players stored. Add golfers in the 'Players' tab.</p>`;
                 return;
             }
 
             container.innerHTML = players.map(p => {
                 const isSelected = activeRound.selectedIDs.includes(p.id);
                 return `
-                    <div onclick="toggleSelectPlayer('${p.id}')" class="flex items-center justify-between p-3 border rounded-xl cursor-pointer transition ${isSelected ? 'border-emerald-600 bg-emerald-50' : 'border-gray-200 bg-white'}">
+                    <div onclick="toggleSelectPlayer('${p.id}')" class="flex items-center justify-between p-3.5 rounded-xl border cursor-pointer transition select-none ${isSelected ? 'border-emerald-600 bg-emerald-50/70 shadow-sm' : 'border-gray-200 bg-white hover:bg-gray-50'}">
                         <div>
-                            <div class="font-bold text-gray-800">${p.name}</div>
-                            <div class="text-xs text-gray-500">${p.venmo}</div>
+                            <div class="font-bold text-sm text-gray-800">${escapeHtml(p.name)}</div>
                         </div>
-                        <div class="text-lg ${isSelected ? 'text-emerald-600' : 'text-gray-300'}">
-                            <i class="fa-solid ${isSelected ? 'fa-check-circle' : 'fa-circle'}"></i>
+                        <div class="text-xl ${isSelected ? 'text-emerald-600' : 'text-gray-300'}">
+                            <i class="fa-solid ${isSelected ? 'fa-circle-check' : 'fa-circle'}"></i>
                         </div>
                     </div>
                 `;
@@ -231,29 +274,35 @@
                 if (activeRound.selectedIDs.length > 2) {
                     activeRound.selectedIDs = activeRound.selectedIDs.filter(item => item !== id);
                 } else {
-                    alert("Minimum 2 players required.");
+                    alert("A round requires a minimum of 2 golfers.");
                 }
             } else {
                 if (activeRound.selectedIDs.length < 4) {
                     activeRound.selectedIDs.push(id);
                 } else {
-                    alert("Maximum 4 players allowed.");
+                    alert("A maximum of 4 golfers can be selected for a foursome.");
                 }
             }
             renderSetupList();
         }
 
+        // Start 18-Hole Round
         function startGame() {
-            if (activeRound.selectedIDs.length < 2) return;
+            if (activeRound.selectedIDs.length < 2) {
+                alert("Please select at least 2 golfers.");
+                return;
+            }
             const selected = players.filter(p => activeRound.selectedIDs.includes(p.id));
             activeRound.activePlayers = selected.map(p => ({
                 id: p.id,
-                name: p.name,
-                venmo: p.venmo
+                name: p.name
             }));
+
             activeRound.currentHole = 1;
             activeRound.gameStarted = true;
-            activeRound.holeHistory = {};
+            activeRound.holeHistory = [];
+            activeRound.currentHoleInputs = {};
+            activeRound.activePlayers.forEach(p => activeRound.currentHoleInputs[p.id] = 0);
 
             document.getElementById('setup-card').classList.add('hidden');
             document.getElementById('gameplay-card').classList.remove('hidden');
@@ -262,39 +311,47 @@
             renderGameplay();
         }
 
+        // Quit Round Functionality
         function confirmQuitRound() {
-            if (confirm("Are you sure you want to quit this round?")) {
+            if (confirm("Are you sure you want to quit this round? All current scorecard inputs will be cleared.")) {
                 resetGame();
             }
         }
 
+        // Active Gameplay Screen Rendering
         function renderGameplay() {
-            const h = activeRound.currentHole;
-            document.getElementById('header-status').innerText = `Hole ${h} of 18`;
-            document.getElementById('current-hole-title').innerText = `Hole ${h} Net Gains/Losses`;
+            document.getElementById('header-status').innerHTML = `<i class="fa-solid fa-flag text-[10px]"></i> Hole ${activeRound.currentHole} of 18`;
+            document.getElementById('current-hole-title').innerText = `Hole ${activeRound.currentHole} Inputs`;
 
-            const currentHoleData = activeRound.holeHistory[h] || {};
-
+            // Prev Hole Navigation Enable/Disable State
             const prevBtn = document.getElementById('prev-hole-btn');
-            if (h === 1) {
+            if (activeRound.currentHole === 1) {
                 prevBtn.disabled = true;
-                prevBtn.className = "w-1/3 bg-gray-100 text-gray-300 font-semibold py-3 rounded-xl transition shadow-none cursor-not-allowed flex items-center justify-center gap-1";
+                prevBtn.classList.add('opacity-50', 'cursor-not-allowed');
             } else {
                 prevBtn.disabled = false;
-                prevBtn.className = "w-1/3 bg-gray-200 text-gray-700 font-semibold py-3 rounded-xl transition shadow hover:bg-gray-300 flex items-center justify-center gap-1 cursor-pointer";
+                prevBtn.classList.remove('opacity-50', 'cursor-not-allowed');
             }
 
             const inputsContainer = document.getElementById('hole-inputs-list');
-            inputsContainer.innerHTML = activeRound.activePlayers.map((p, idx) => {
-                const val = currentHoleData[p.id] !== undefined ? currentHoleData[p.id] : 0;
+            inputsContainer.innerHTML = activeRound.activePlayers.map(p => {
+                const currentVal = activeRound.currentHoleInputs[p.id] || 0;
+                const isNegative = currentVal < 0 || Object.is(currentVal, -0);
+                const absVal = Math.abs(currentVal);
+                const displayVal = absVal === 0 ? '' : absVal.toString();
+
                 return `
-                    <div class="flex items-center justify-between bg-gray-50 p-3 rounded-xl border border-gray-200">
-                        <span class="font-bold text-gray-800 text-sm w-1/3">${p.name}</span>
+                    <div class="flex items-center justify-between bg-gray-50 p-3 rounded-xl border border-gray-200/80">
+                        <div class="w-1/3">
+                            <span class="font-bold text-gray-800 text-sm block truncate">${escapeHtml(p.name)}</span>
+                        </div>
                         <div class="flex items-center space-x-2 w-2/3 justify-end">
-                            <button type="button" onclick="toggleSign('${p.id}')" class="px-2.5 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold rounded-lg text-xs">+/-</button>
+                            <button onclick="toggleSign('${p.id}')" class="px-3 py-2 ${isNegative ? 'bg-red-600 text-white' : 'bg-emerald-600 text-white'} font-black rounded-lg text-xs shadow-sm active:scale-95 transition" title="Toggle Wins (+) / Losses (-)">
+                                ${isNegative ? '-' : '+'}
+                            </button>
                             <div class="relative w-28">
-                                <span class="absolute left-3 top-2.5 text-gray-400 font-semibold">$</span>
-                                <input type="tel" id="input-${p.id}" value="${val === 0 ? '' : val}" oninput="updateHoleNet('${p.id}', this.value)" placeholder="0.00" class="w-full pl-7 pr-3 py-2 border border-gray-300 rounded-lg text-right font-bold text-gray-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                                <span class="absolute left-3 top-2 text-gray-400 font-bold text-sm">$</span>
+                                <input type="number" step="0.01" inputmode="decimal" id="input-${p.id}" value="${displayVal}" oninput="updateHoleInput('${p.id}', this.value)" placeholder="0.00" class="w-full pl-7 pr-2 py-1.5 border border-gray-300 rounded-lg text-right font-bold text-gray-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-sm">
                             </div>
                         </div>
                     </div>
@@ -305,31 +362,342 @@
             checkBalance();
         }
 
+        // +/- Dedicated Sign Toggle Helper
         function toggleSign(playerId) {
-            const h = activeRound.currentHole;
-            if (!activeRound.holeHistory[h]) activeRound.holeHistory[h] = {};
-            const current = activeRound.holeHistory[h][playerId] || 0;
-            activeRound.holeHistory[h][playerId] = current * -1;
+            let val = activeRound.currentHoleInputs[playerId] || 0;
+            if (val === 0) {
+                activeRound.currentHoleInputs[playerId] = -0;
+            } else {
+                activeRound.currentHoleInputs[playerId] = -val;
+            }
             renderGameplay();
         }
 
-        function updateHoleNet(playerId, val) {
-            const h = activeRound.currentHole;
-            if (!activeRound.holeHistory[h]) activeRound.holeHistory[h] = {};
-            let cleanVal = val.replace(/[^0-9.-]/g, '');
-            activeRound.holeHistory[h][playerId] = parseFloat(cleanVal) || 0;
+        function updateHoleInput(playerId, rawVal) {
+            const parsed = parseFloat(rawVal) || 0;
+            const isNegative = (activeRound.currentHoleInputs[playerId] < 0) || Object.is(activeRound.currentHoleInputs[playerId], -0);
+
+            if (isNegative && parsed > 0) {
+                activeRound.currentHoleInputs[playerId] = -parsed;
+            } else {
+                activeRound.currentHoleInputs[playerId] = parsed;
+            }
+
             checkBalance();
             renderLeaderboard();
         }
 
+        // Zero-Sum Ledger Validation Check
         function checkBalance() {
-            const h = activeRound.currentHole;
-            const holeData = activeRound.holeHistory[h] || {};
-            let sum = 0;
-            activeRound.activePlayers.forEach(p => {
-                sum += (holeData[p.id] || 0);
-            });
+            const sum = Object.values(activeRound.currentHoleInputs).reduce((acc, val) => acc + (isNaN(val) ? 0 : val), 0);
+            const isBalanced = Math.abs(sum) < 0.009;
 
-            const isBalanced = Math.abs(sum) < 0.01;
             const banner = document.getElementById('balance-banner');
             const balanceText = document.getElementById('balance-text');
+            const badge = document.getElementById('balance-badge');
+            const nextBtn = document.getElementById('next-hole-btn');
+
+            balanceText.innerText = `Net Sum: ${formatCurrency(sum)}`;
+
+            if (isBalanced) {
+                banner.className = "bg-white rounded-2xl shadow-sm p-4 flex items-center justify-between border-l-4 border-emerald-500";
+                badge.className = "px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 flex items-center gap-1.5 shadow-sm";
+                badge.innerHTML = `<i class="fa-solid fa-circle-check"></i> Balanced`;
+                balanceText.className = "text-xl font-black text-emerald-600";
+                
+                nextBtn.disabled = false;
+                nextBtn.className = "w-2/3 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-bold py-3.5 rounded-xl transition shadow-md shadow-emerald-600/20 cursor-pointer flex items-center justify-center gap-1.5 text-xs";
+                nextBtn.innerHTML = activeRound.currentHole < 18 
+                    ? `Save & Next <i class="fa-solid fa-arrow-right"></i>` 
+                    : `Finish Round <i class="fa-solid fa-flag-checkered"></i>`;
+            } else {
+                banner.className = "bg-white rounded-2xl shadow-sm p-4 flex items-center justify-between border-l-4 border-red-500";
+                badge.className = "px-3 py-1.5 rounded-full text-xs font-bold bg-red-100 text-red-800 flex items-center gap-1.5 shadow-sm";
+                badge.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Unbalanced`;
+                balanceText.className = "text-xl font-black text-red-600";
+                
+                nextBtn.disabled = true;
+                nextBtn.className = "w-2/3 bg-gray-200 text-gray-400 font-bold py-3.5 rounded-xl transition shadow-none cursor-not-allowed flex items-center justify-center gap-1.5 text-xs";
+                nextBtn.innerText = "Must Equal $0.00";
+            }
+        }
+
+        // Dynamic Running Total Standings Calculation
+        function calculateCumulativeTotals() {
+            let totals = {};
+            activeRound.activePlayers.forEach(p => totals[p.id] = 0);
+
+            // Total past holes
+            activeRound.holeHistory.forEach((hole, idx) => {
+                if (hole && idx !== (activeRound.currentHole - 1)) {
+                    Object.keys(hole).forEach(pId => {
+                        totals[pId] = (totals[pId] || 0) + hole[pId];
+                    });
+                }
+            });
+
+            // Add active hole inputs
+            Object.keys(activeRound.currentHoleInputs).forEach(pId => {
+                const val = activeRound.currentHoleInputs[pId] || 0;
+                totals[pId] = (totals[pId] || 0) + (isNaN(val) ? 0 : val);
+            });
+
+            return totals;
+        }
+
+        function renderLeaderboard() {
+            const list = document.getElementById('leaderboard-list');
+            const totals = calculateCumulativeTotals();
+
+            const sorted = [...activeRound.activePlayers].map(p => ({
+                ...p,
+                totalNet: totals[p.id] || 0
+            })).sort((a, b) => b.totalNet - a.totalNet);
+
+            list.innerHTML = sorted.map(p => {
+                const colorClass = p.totalNet > 0 ? 'text-emerald-600' : (p.totalNet < 0 ? 'text-red-600' : 'text-gray-600');
+                return `
+                    <div class="flex justify-between items-center py-2 border-b border-gray-100 last:border-0">
+                        <div>
+                            <div class="font-bold text-sm text-gray-800">${escapeHtml(p.name)}</div>
+                        </div>
+                        <div class="font-black text-sm ${colorClass}">
+                            ${formatCurrency(p.totalNet)}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Save & Advance Hole
+        function recordHole() {
+            const idx = activeRound.currentHole - 1;
+            activeRound.holeHistory[idx] = { ...activeRound.currentHoleInputs };
+
+            if (activeRound.currentHole < 18) {
+                activeRound.currentHole++;
+                const nextIdx = activeRound.currentHole - 1;
+                if (activeRound.holeHistory[nextIdx]) {
+                    activeRound.currentHoleInputs = { ...activeRound.holeHistory[nextIdx] };
+                } else {
+                    activeRound.currentHoleInputs = {};
+                    activeRound.activePlayers.forEach(p => activeRound.currentHoleInputs[p.id] = 0);
+                }
+                renderGameplay();
+            } else {
+                showSettlements();
+            }
+        }
+
+        // Navigate to Previous Hole
+        function previousHole() {
+            if (activeRound.currentHole > 1) {
+                const currentIdx = activeRound.currentHole - 1;
+                activeRound.holeHistory[currentIdx] = { ...activeRound.currentHoleInputs };
+
+                activeRound.currentHole--;
+                const prevIdx = activeRound.currentHole - 1;
+                
+                if (activeRound.holeHistory[prevIdx]) {
+                    activeRound.currentHoleInputs = { ...activeRound.holeHistory[prevIdx] };
+                } else {
+                    activeRound.currentHoleInputs = {};
+                    activeRound.activePlayers.forEach(p => activeRound.currentHoleInputs[p.id] = 0);
+                }
+
+                renderGameplay();
+            }
+        }
+
+        function reopenHole(holeNum) {
+            activeRound.currentHole = holeNum;
+            const idx = holeNum - 1;
+            if (activeRound.holeHistory[idx]) {
+                activeRound.currentHoleInputs = { ...activeRound.holeHistory[idx] };
+            }
+            document.getElementById('settlement-card').classList.add('hidden');
+            document.getElementById('gameplay-card').classList.remove('hidden');
+            renderGameplay();
+        }
+
+        // End-of-Round Settlement Sheet
+        function showSettlements() {
+            document.getElementById('gameplay-card').classList.add('hidden');
+            document.getElementById('settlement-card').classList.remove('hidden');
+            document.getElementById('header-status').innerHTML = `<i class="fa-solid fa-check text-[10px]"></i> Round Finished`;
+
+            const container = document.getElementById('settlement-list');
+            
+            // Sum all net history
+            let finalTotals = {};
+            activeRound.activePlayers.forEach(p => finalTotals[p.id] = 0);
+            activeRound.holeHistory.forEach(hole => {
+                if (hole) {
+                    Object.keys(hole).forEach(pId => {
+                        finalTotals[pId] = (finalTotals[pId] || 0) + hole[pId];
+                    });
+                }
+            });
+
+            const playerBalances = activeRound.activePlayers.map(p => ({
+                ...p,
+                totalNet: finalTotals[p.id] || 0
+            }));
+
+            let debtors = playerBalances.filter(p => p.totalNet < -0.009).map(p => ({ ...p, balance: Math.abs(p.totalNet) }));
+            let creditors = playerBalances.filter(p => p.totalNet > 0.009).map(p => ({ ...p, balance: p.totalNet }));
+
+            if (debtors.length === 0 || creditors.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-6 bg-emerald-50 rounded-xl border border-emerald-200">
+                        <i class="fa-solid fa-handshake text-emerald-600 text-3xl mb-2"></i>
+                        <p class="font-bold text-gray-800 text-sm">Everyone broke completely even!</p>
+                        <p class="text-xs text-gray-500 mt-1">No money settlements required for this round.</p>
+                    </div>`;
+                return;
+            }
+
+            let transactions = [];
+            let i = 0, j = 0;
+
+            while (i < debtors.length && j < creditors.length) {
+                let debt = debtors[i].balance;
+                let credit = creditors[j].balance;
+                let payment = Math.min(debt, credit);
+
+                transactions.push({
+                    from: debtors[i].name,
+                    to: creditors[j].name,
+                    amount: payment
+                });
+
+                debtors[i].balance -= payment;
+                creditors[j].balance -= payment;
+
+                if (debtors[i].balance < 0.009) i++;
+                if (creditors[j].balance < 0.009) j++;
+            }
+
+            container.innerHTML = transactions.map(t => {
+                return `
+                    <div class="bg-gray-50 border border-gray-200/80 rounded-2xl p-4 flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-red-100 text-red-600 rounded-full flex items-center justify-center font-bold text-sm">
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                            </div>
+                            <div>
+                                <div class="text-xs text-gray-400 font-semibold uppercase tracking-wider">Payment Direction</div>
+                                <div class="text-sm font-bold text-gray-800">
+                                    <span class="text-red-600">${escapeHtml(t.from)}</span> owes <span class="text-emerald-600">${escapeHtml(t.to)}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-xs text-gray-400 block font-semibold uppercase">Amount</span>
+                            <span class="text-lg font-black text-emerald-600">${formatCurrency(t.amount)}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Reset Round Logic
+        function resetGame() {
+            activeRound.gameStarted = false;
+            activeRound.currentHole = 1;
+            activeRound.holeHistory = [];
+            activeRound.currentHoleInputs = {};
+            document.getElementById('gameplay-card').classList.add('hidden');
+            document.getElementById('settlement-card').classList.add('hidden');
+            document.getElementById('setup-card').classList.remove('hidden');
+            document.getElementById('header-status').innerHTML = `<i class="fa-solid fa-circle-info text-[10px]"></i> Setup Phase`;
+            renderSetupList();
+        }
+
+        // Player Directory Operations
+        function renderDirectory() {
+            const list = document.getElementById('directory-list');
+            if (players.length === 0) {
+                list.innerHTML = `<p class="text-xs text-gray-400 text-center py-6">No players stored. Tap 'Add' to create one.</p>`;
+                return;
+            }
+
+            list.innerHTML = players.map(p => `
+                <div class="flex justify-between items-center p-3.5 bg-gray-50 border border-gray-200/80 rounded-xl">
+                    <div class="font-bold text-sm text-gray-800">${escapeHtml(p.name)}</div>
+                    <div class="flex space-x-1">
+                        <button onclick="editPlayer('${p.id}')" class="p-2 text-gray-500 hover:text-gray-800 transition"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button onclick="deletePlayer('${p.id}')" class="p-2 text-red-400 hover:text-red-600 transition"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function openAddPlayerModal() {
+            editingPlayerId = null;
+            document.getElementById('modal-title').innerText = "Add Golfer";
+            document.getElementById('modal-name').value = "";
+            document.getElementById('player-modal').classList.remove('hidden');
+        }
+
+        function editPlayer(id) {
+            editingPlayerId = id;
+            const p = players.find(x => x.id === id);
+            if (!p) return;
+            document.getElementById('modal-title').innerText = "Edit Golfer";
+            document.getElementById('modal-name').value = p.name;
+            document.getElementById('player-modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('player-modal').classList.add('hidden');
+        }
+
+        function savePlayer() {
+            const name = document.getElementById('modal-name').value.trim();
+
+            if (!name) {
+                alert("Please enter a player name.");
+                return;
+            }
+
+            if (editingPlayerId) {
+                players = players.map(p => p.id === editingPlayerId ? { ...p, name } : p);
+            } else {
+                const newP = { id: Date.now().toString(), name };
+                players.push(newP);
+                if (activeRound.selectedIDs.length < 4) {
+                    activeRound.selectedIDs.push(newP.id);
+                }
+            }
+
+            localStorage.setItem('golf_settler_directory', JSON.stringify(players));
+            closeModal();
+            renderDirectory();
+            renderSetupList();
+        }
+
+        function deletePlayer(id) {
+            if (players.length <= 2) {
+                alert("You must keep at least 2 golfers in your directory.");
+                return;
+            }
+            players = players.filter(p => p.id !== id);
+            activeRound.selectedIDs = activeRound.selectedIDs.filter(selectedId => selectedId !== id);
+            localStorage.setItem('golf_settler_directory', JSON.stringify(players));
+            renderDirectory();
+            renderSetupList();
+        }
+
+        // Helper Functions
+        function formatCurrency(val) {
+            const absVal = Math.abs(val).toFixed(2);
+            return (val < -0.009 ? "-$" : "$") + absVal;
+        }
+
+        function escapeHtml(str) {
+            return (str || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
